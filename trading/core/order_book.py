@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from heapq import heappop, heappush
 from typing import Callable, DefaultDict, Dict, List, Optional, Set, Tuple
 
-from .enums import OrderSide
+from .enums import OrderSide, OrderType
 from .order import Order
 
 
@@ -43,6 +43,8 @@ class OrderBook:
     def add_order(self, order: Order) -> None:
         if order.symbol is not None and order.symbol != self.symbol:
             raise ValueError("Order symbol does not match order book symbol")
+        if order.type == OrderType.STOP_LOSS:
+            raise ValueError("STOP_LOSS orders cannot be added directly to the order book; submit via engine")
         self._orders_by_id[order.id] = order
         # Compute heap key with price-time priority
         self._seq_counter += 1

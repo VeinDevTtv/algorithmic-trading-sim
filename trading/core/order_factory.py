@@ -68,6 +68,28 @@ class OrderFactory:
         )
 
     @staticmethod
+    def create_stop_loss(
+        order_id: str,
+        side: Union[str, OrderSide],
+        stop_price: float,
+        quantity: float,
+        timestamp: Optional[datetime] = None,
+        symbol: Optional[str] = None,
+        trader_id: Optional[str] = None,
+    ) -> Order:
+        ts = timestamp or datetime.now(tz=timezone.utc)
+        return Order(
+            id=order_id,
+            type=OrderType.STOP_LOSS,
+            side=_parse_side(side),
+            price=stop_price,
+            quantity=quantity,
+            timestamp=ts,
+            symbol=symbol,
+            trader_id=trader_id,
+        )
+
+    @staticmethod
     def from_dict(values: Dict[str, Any]) -> Order:
         """Create an order from a plain dictionary.
 
@@ -87,6 +109,16 @@ class OrderFactory:
             return OrderFactory.create_market(
                 order_id=order_id,
                 side=side,
+                quantity=quantity,
+                timestamp=timestamp,
+                symbol=symbol,
+                trader_id=trader_id,
+            )
+        if order_type == OrderType.STOP_LOSS:
+            return OrderFactory.create_stop_loss(
+                order_id=order_id,
+                side=side,
+                stop_price=float(price) if price is not None else None,
                 quantity=quantity,
                 timestamp=timestamp,
                 symbol=symbol,

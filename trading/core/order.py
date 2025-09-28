@@ -37,6 +37,9 @@ class Order:
         elif self.type == OrderType.LIMIT:
             if self.price is None or self.price <= 0:
                 raise ValueError("Limit orders must have a positive price")
+        elif self.type == OrderType.STOP_LOSS:
+            if self.price is None or self.price <= 0:
+                raise ValueError("Stop-loss orders must have a positive stop price")
         else:
             raise ValueError(f"Unsupported order type: {self.type}")
 
