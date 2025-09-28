@@ -8,6 +8,7 @@ from .core import (
     OrderFactory,
     OrderType,
     OrderSide,
+    TimeInForce,
 )
 
 __all__ = [
@@ -18,6 +19,7 @@ __all__ = [
     "OrderFactory",
     "OrderType",
     "OrderSide",
+    "TimeInForce",
 ]
 
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
-from .enums import OrderSide, OrderType
+from .enums import OrderSide, OrderType, TimeInForce
 
 
 def _ensure_timezone_aware(ts: datetime) -> datetime:
@@ -23,6 +23,10 @@ class Order:
     timestamp: datetime
     symbol: Optional[str] = None
     trader_id: Optional[str] = None
+    tif: TimeInForce = TimeInForce.GTC
+    aux_price: Optional[float] = None  # e.g., limit price for STOP_LIMIT or initial stop for TRAILING_STOP
+    trailing_offset: Optional[float] = None  # absolute offset for trailing stops
+    display_quantity: Optional[float] = None  # visible slice for ICEBERG
 
     def __post_init__(self) -> None:
         if not self.id:
@@ -40,6 +44,22 @@ class Order:
         elif self.type == OrderType.STOP_LOSS:
             if self.price is None or self.price <= 0:
                 raise ValueError("Stop-loss orders must have a positive stop price")
+        elif self.type == OrderType.STOP_LIMIT:
+            if self.price is None or self.price <= 0:
+                raise ValueError("Stop-limit orders must have a positive stop price")
+            if self.aux_price is None or self.aux_price <= 0:
+                raise ValueError("Stop-limit orders must include a positive aux (limit) price")
+        elif self.type == OrderType.TRAILING_STOP:
+            # price here may serve as initial stop or may be None if offset provided
+            if self.trailing_offset is None or self.trailing_offset <= 0:
+                raise ValueError("Trailing-stop orders must include a positive trailing_offset")
+        elif self.type == OrderType.ICEBERG:
+            if self.price is None or self.price <= 0:
+                raise ValueError("Iceberg orders must have a positive limit price")
+            if self.display_quantity is None or self.display_quantity <= 0:
+                raise ValueError("Iceberg orders must specify a positive display_quantity")
+            if self.display_quantity > self.quantity:
+                raise ValueError("display_quantity cannot exceed total quantity")
         else:
             raise ValueError(f"Unsupported order type: {self.type}")
 
@@ -47,5 +67,12 @@ class Order:
             raise ValueError(f"Unsupported order side: {self.side}")
 
         self.timestamp = _ensure_timezone_aware(self.timestamp)
+        # Validate TIF
+        if not isinstance(self.tif, TimeInForce):
+            # allow string conversion for convenience
+            try:
+                self.tif = TimeInForce(str(self.tif))
+            except Exception as exc:
+                raise ValueError("Invalid TimeInForce value") from exc
 
 

@@ -43,8 +43,8 @@ class OrderBook:
     def add_order(self, order: Order) -> None:
         if order.symbol is not None and order.symbol != self.symbol:
             raise ValueError("Order symbol does not match order book symbol")
-        if order.type == OrderType.STOP_LOSS:
-            raise ValueError("STOP_LOSS orders cannot be added directly to the order book; submit via engine")
+        if order.type in (OrderType.STOP_LOSS, OrderType.STOP_LIMIT, OrderType.TRAILING_STOP, OrderType.ICEBERG):
+            raise ValueError("This order type cannot be added directly to the order book; submit via engine")
         self._orders_by_id[order.id] = order
         # Compute heap key with price-time priority
         self._seq_counter += 1
