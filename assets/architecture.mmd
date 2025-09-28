@@ -1,0 +1,35 @@
+flowchart TD
+  subgraph Client
+    UI[Browser UI]
+  end
+  subgraph Server[FastAPI Server]
+    API[/REST Endpoints\n/api/depth\n/api/trades\n/api/candles/]
+  end
+  subgraph Core[Trading Core]
+    ME[MatchingEngine]
+    OB[OrderBook]
+    TRD[Trader]
+    TRADES[(Trades List)]
+    RISK[Risk Checks]
+    ICE[Iceberg\nStop/Trailing]
+  end
+  subgraph Analytics
+    OHLC[CandleAggregator]
+  end
+  subgraph Sim
+    BOTS[RandomBots\nBotScheduler]
+  end
+
+  UI -->|HTTP| API
+  API --> ME
+  ME <--> OB
+  ME --> TRADES
+  ME --> RISK
+  ME --> ICE
+  ME --> OHLC
+  BOTS -->|Orders| ME
+  OHLC -->|Candles| API
+  OB -->|Depth| API
+  TRADES -->|Recent| API
+
+

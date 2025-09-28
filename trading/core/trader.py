@@ -132,6 +132,17 @@ class Trader:
                 realized = (price - avg) * sell_qty
                 self._realized_pnl += realized
                 self._realized_by_symbol[symbol] = self._realized_by_symbol.get(symbol, 0.0) + realized
+                new_qty = current_qty - quantity
+                if new_qty > 0:
+                    self.positions[symbol] = new_qty
+                elif new_qty < 0:
+                    # Crossed into short; set new avg to trade price for remaining
+                    self.positions[symbol] = new_qty
+                    self._avg_price[symbol] = price
+                else:
+                    # Flat
+                    self.positions.pop(symbol, None)
+                    self._avg_price.pop(symbol, None)
 
     # --- PnL breakdown per instrument ---
     def pnl_by_symbol(self) -> Dict[str, Dict[str, float]]:
@@ -156,16 +167,3 @@ class Trader:
                 "realized": realized,
             }
         return report
-                new_qty = current_qty - quantity
-                if new_qty > 0:
-                    self.positions[symbol] = new_qty
-                elif new_qty < 0:
-                    # Crossed into short; set new avg to trade price for remaining
-                    self.positions[symbol] = new_qty
-                    self._avg_price[symbol] = price
-                else:
-                    # Flat
-                    self.positions.pop(symbol, None)
-                    self._avg_price.pop(symbol, None)
-
-

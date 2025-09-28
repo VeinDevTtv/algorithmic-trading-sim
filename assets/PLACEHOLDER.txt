@@ -1,0 +1,9 @@
+Add screenshots (PNG) and demo GIFs here, e.g.:
+- screenshot_ui.png (UI depth/trades)
+- screenshot_candles.png (OHLC chart)
+- demo.gif (short capture of the UI)
+
+Diagrams:
+- architecture.mmd (Mermaid) — view at https://mermaid.live
+
+

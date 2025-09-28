@@ -31,11 +31,13 @@ engine = MatchingEngine(order_book=order_book)
 candles = CandleAggregator(symbol=SYMBOL, period_seconds=60)
 
 
-@engine.subscribe  # type: ignore[attr-defined]
-def _(event: str, payload):
+def _on_engine_event(event: str, payload):
     # forward trades to candle aggregator
     if event == "trade_executed":
         candles.add_trade(payload)
+
+# Subscribe explicitly to the trade event
+engine.subscribe("trade_executed", _on_engine_event)
 
 
 def _init_bots() -> BotScheduler:

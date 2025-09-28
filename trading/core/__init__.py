@@ -1,6 +1,6 @@
 """Core domain models and services for the trading system."""
 
-from .enums import OrderType, OrderSide
+from .enums import OrderType, OrderSide, TimeInForce
 from .order import Order
 from .order_factory import OrderFactory
 from .trader import Trader
@@ -10,6 +10,7 @@ from .matching_engine import MatchingEngine, Trade
 __all__ = [
     "OrderType",
     "OrderSide",
+    "TimeInForce",
     "Order",
     "OrderFactory",
     "Trader",
