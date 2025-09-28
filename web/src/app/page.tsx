@@ -5,29 +5,37 @@ import { OrderEntry } from "@/components/controls/order-entry";
 import { Positions, type Position } from "@/components/portfolio/positions";
 import { AnimatedNumber } from "@/components/metrics/animated-number";
 
+function seededRandom(seed: number) {
+  let t = seed;
+  return () => {
+    t = (t * 1664525 + 1013904223) % 4294967296;
+    return t / 4294967296;
+  };
+}
+const rnd = seededRandom(12345);
 const sampleOrderBook: OrderBookRow[] = Array.from({ length: 16 }).map((_, i) => ({
   price: 1000 + i * 0.5,
-  size: Math.random(),
-  total: Math.random() * 5,
+  size: rnd(),
+  total: rnd() * 5,
   side: i % 2 === 0 ? "bid" : "ask",
-  depth: Math.random(),
+  depth: rnd(),
 }));
 
 const sampleTrades: Trade[] = Array.from({ length: 100 }).map((_, i) => ({
   id: `t${i}`,
   price: 1000 + Math.sin(i / 5) * 5,
-  size: Math.random(),
+  size: rnd(),
   side: i % 2 === 0 ? "buy" : "sell",
-  ts: Date.now() - i * 60000,
+  ts: 1700000000000 - i * 60000,
 }));
 
 const sampleCandles: Candle[] = Array.from({ length: 100 }).map((_, i) => {
   const base = 1000 + i * 0.2;
-  const open = base + Math.random() * 2 - 1;
-  const close = base + Math.random() * 2 - 1;
-  const high = Math.max(open, close) + Math.random() * 2;
-  const low = Math.min(open, close) - Math.random() * 2;
-  return { time: Math.floor(Date.now() / 1000) - (100 - i) * 60, open, high, low, close, volume: Math.random() * 100 };
+  const open = base + rnd() * 2 - 1;
+  const close = base + rnd() * 2 - 1;
+  const high = Math.max(open, close) + rnd() * 2;
+  const low = Math.min(open, close) - rnd() * 2;
+  return { time: Math.floor(1700000000000 / 1000) - (100 - i) * 60, open, high, low, close, volume: rnd() * 100 };
 });
 
 const samplePositions: Position[] = [

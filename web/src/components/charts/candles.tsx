@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { createChart, IChartApi, ISeriesApi } from "lightweight-charts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { IChartApi, ISeriesApi } from "lightweight-charts";
 
 export type Candle = { time: number; open: number; high: number; low: number; close: number; volume: number };
 type Interval = "1m" | "5m" | "15m";
@@ -15,26 +15,48 @@ export function Candles({ data, onIntervalChange }: { data: Candle[]; onInterval
 
   React.useEffect(() => {
     if (!containerRef.current) return;
-    const chart = createChart(containerRef.current, {
-      layout: { background: { color: "transparent" }, textColor: "var(--color-muted-foreground)" },
-      grid: { vertLines: { color: "#2223" }, horzLines: { color: "#2223" } },
-      width: containerRef.current.clientWidth,
-      height: 360,
-      timeScale: { timeVisible: true, secondsVisible: false },
-    });
-    const s = chart.addCandlestickSeries({ upColor: "#22c55e", downColor: "#ef4444", borderVisible: false });
-    s.setData(data.map((c) => ({ time: c.time as any, open: c.open, high: c.high, low: c.low, close: c.close })));
-    chartRef.current = chart;
-    seriesRef.current = s;
-    const ro = new ResizeObserver(() => {
-      if (containerRef.current) chart.applyOptions({ width: containerRef.current.clientWidth });
-    });
-    ro.observe(containerRef.current);
+    let isMounted = true;
+    (async () => {
+      const { createChart } = await import("lightweight-charts");
+      if (!isMounted || !containerRef.current) return;
+      const computed = getComputedStyle(document.documentElement);
+      const textColor = computed.getPropertyValue("--chart-text-color").trim() || "#9CA3AF"; // fallback gray-400
+      const chart = createChart(containerRef.current, {
+        layout: { background: { color: "transparent" }, textColor },
+        grid: { vertLines: { color: "rgba(34,34,34,0.2)" }, horzLines: { color: "rgba(34,34,34,0.2)" } },
+        width: containerRef.current.clientWidth,
+        height: 360,
+        timeScale: { timeVisible: true, secondsVisible: false },
+      });
+      const maybeAddCandle = (chart as any).addCandlestickSeries;
+      let series: any;
+      if (typeof maybeAddCandle === "function") {
+        series = maybeAddCandle.call(chart, { upColor: "#22c55e", downColor: "#ef4444", borderVisible: false });
+        series.setData(
+          data.map((c) => ({ time: c.time as any, open: c.open, high: c.high, low: c.low, close: c.close }))
+        );
+      } else if (typeof (chart as any).addLineSeries === "function") {
+        series = (chart as any).addLineSeries({ color: "#60a5fa" });
+        series.setData(data.map((c) => ({ time: c.time as any, value: c.close })));
+      } else {
+        // Fallback no-op to avoid crashes in unexpected environments
+        series = { setData: () => {} };
+      }
+      chartRef.current = chart;
+      seriesRef.current = series as ISeriesApi<any>;
+      const ro = new ResizeObserver(() => {
+        if (containerRef.current) chart.applyOptions({ width: containerRef.current.clientWidth });
+      });
+      ro.observe(containerRef.current);
+      return () => {
+        ro.disconnect();
+        chart.remove();
+        chartRef.current = null;
+        seriesRef.current = null;
+      };
+    })();
     return () => {
-      ro.disconnect();
-      chart.remove();
-      chartRef.current = null;
-      seriesRef.current = null;
+      isMounted = false;
     };
   }, [data]);
 

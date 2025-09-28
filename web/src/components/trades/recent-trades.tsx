@@ -24,7 +24,7 @@ export function RecentTrades({ trades }: { trades: Trade[] }): JSX.Element {
   });
 
   return (
-    <ScrollArea className="h-64" viewportRef={parentRef}>
+    <ScrollArea className="h-64" viewportRef={parentRef as any}>
       <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const t = trades[virtualRow.index]!;

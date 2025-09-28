@@ -37,25 +37,27 @@ export function OrderBook({ data }: { data: OrderBookRow[] }): JSX.Element {
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              className={cn("relative overflow-hidden transition-colors", row.original.side === "bid" ? "hover:bg-emerald-500/5" : "hover:bg-red-500/5")}
-              style={{}}
-            >
-              {/* Depth overlay */}
-              <div
-                aria-hidden
-                className={cn("absolute inset-y-0 right-0 pointer-events-none", row.original.side === "bid" ? "bg-emerald-500/10" : "bg-red-500/10")}
-                style={{ width: `${Math.max(0, Math.min(1, row.original.depth)) * 100}%` }}
-              />
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id} className="relative">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
+          {table.getRowModel().rows.map((row) => {
+            const widthPct = Math.max(0, Math.min(1, row.original.depth)) * 100;
+            const overlayColor = row.original.side === "bid" ? "rgba(34,197,94,0.10)" : "rgba(239,68,68,0.10)"; // emerald/red with 10% opacity
+            const hoverClass = row.original.side === "bid" ? "hover:bg-emerald-500/5" : "hover:bg-red-500/5";
+            return (
+              <TableRow
+                key={row.id}
+                className={cn("relative transition-colors", hoverClass)}
+                style={{
+                  backgroundImage: `linear-gradient(to left, ${overlayColor} ${widthPct}%, transparent ${widthPct}%)`,
+                  backgroundRepeat: "no-repeat",
+                }}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} className="relative">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

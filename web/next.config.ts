@@ -2,9 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   turbopack: {
-    // Ensure Turbopack treats the web folder as the root
-    // to silence multi-lockfile workspace root warnings
-    rootDirectory: __dirname,
+    // Treat the web folder as the root to silence multi-lockfile warnings
+    root: __dirname,
   },
 };
 
