@@ -21,6 +21,8 @@ class Order:
     price: Optional[float]
     quantity: float
     timestamp: datetime
+    symbol: Optional[str] = None
+    trader_id: Optional[str] = None
 
     def __post_init__(self) -> None:
         if not self.id:

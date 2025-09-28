@@ -31,6 +31,8 @@ class OrderFactory:
         price: float,
         quantity: float,
         timestamp: Optional[datetime] = None,
+        symbol: Optional[str] = None,
+        trader_id: Optional[str] = None,
     ) -> Order:
         ts = timestamp or datetime.now(tz=timezone.utc)
         return Order(
@@ -40,6 +42,8 @@ class OrderFactory:
             price=price,
             quantity=quantity,
             timestamp=ts,
+            symbol=symbol,
+            trader_id=trader_id,
         )
 
     @staticmethod
@@ -48,6 +52,8 @@ class OrderFactory:
         side: Union[str, OrderSide],
         quantity: float,
         timestamp: Optional[datetime] = None,
+        symbol: Optional[str] = None,
+        trader_id: Optional[str] = None,
     ) -> Order:
         ts = timestamp or datetime.now(tz=timezone.utc)
         return Order(
@@ -57,6 +63,8 @@ class OrderFactory:
             price=None,
             quantity=quantity,
             timestamp=ts,
+            symbol=symbol,
+            trader_id=trader_id,
         )
 
     @staticmethod
@@ -72,6 +80,8 @@ class OrderFactory:
         price = values.get("price")
         ts = values.get("timestamp")
         timestamp = ts if isinstance(ts, datetime) else None
+        symbol = values.get("symbol")
+        trader_id = values.get("trader_id")
 
         if order_type == OrderType.MARKET:
             return OrderFactory.create_market(
@@ -79,6 +89,8 @@ class OrderFactory:
                 side=side,
                 quantity=quantity,
                 timestamp=timestamp,
+                symbol=symbol,
+                trader_id=trader_id,
             )
         return OrderFactory.create_limit(
             order_id=order_id,
@@ -86,6 +98,8 @@ class OrderFactory:
             price=float(price) if price is not None else None,  # validated by Order
             quantity=quantity,
             timestamp=timestamp,
+            symbol=symbol,
+            trader_id=trader_id,
         )
 
 

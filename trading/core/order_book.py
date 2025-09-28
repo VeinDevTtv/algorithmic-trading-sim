@@ -16,6 +16,7 @@ class OrderBook:
     symbol: str
     bids: List[Order] = field(default_factory=list)
     asks: List[Order] = field(default_factory=list)
+    _orders_by_id: Dict[str, Order] = field(default_factory=dict)
     _subscribers: DefaultDict[str, List[Subscriber]] = field(
         default_factory=lambda: defaultdict(list)
     )
@@ -37,6 +38,8 @@ class OrderBook:
             handler(event, order)
 
     def add_order(self, order: Order) -> None:
+        if order.symbol is not None and order.symbol != self.symbol:
+            raise ValueError("Order symbol does not match order book symbol")
         if order.side == OrderSide.BUY:
             self.bids.append(order)
             # Highest price first for bids; market orders treated as price = inf
@@ -45,6 +48,7 @@ class OrderBook:
             self.asks.append(order)
             # Lowest price first for asks; market orders treated as price = 0
             self.asks.sort(key=lambda o: 0.0 if o.price is None else o.price)
+        self._orders_by_id[order.id] = order
         self._notify("order_added", order)
 
     def remove_order(self, order_id: str) -> Optional[Order]:
@@ -52,8 +56,12 @@ class OrderBook:
             for idx, ord in enumerate(book):
                 if ord.id == order_id:
                     removed = book.pop(idx)
+                    self._orders_by_id.pop(order_id, None)
                     self._notify("order_removed", removed)
                     return removed
         return None
+
+    def get_order(self, order_id: str) -> Optional[Order]:
+        return self._orders_by_id.get(order_id)
 
 
