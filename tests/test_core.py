@@ -62,8 +62,8 @@ def test_order_book_add_remove_and_sorting():
     ob.add_order(o1)
     ob.add_order(o2)
     ob.add_order(o3)
-    assert ob.bids[0].id == "b2"  # highest first
-    assert ob.asks[0].id == "a1"  # lowest first
+    assert ob.best_bid() and ob.best_bid().id == "b2"  # highest first
+    assert ob.best_ask() and ob.best_ask().id == "a1"  # lowest first
     removed = ob.remove_order("b1")
     assert removed and removed.id == "b1"
 
@@ -79,7 +79,7 @@ def test_matching_engine_basic_match():
     assert tr.quantity == 1
     assert tr.price == 100.5
     # order book updated: bid reduced to 1, ask removed
-    assert ob.bids[0].quantity == 1
-    assert len(ob.asks) == 0
+    assert ob.best_bid() is not None and ob.best_bid().quantity == 1
+    assert ob.best_ask() is None
 
 

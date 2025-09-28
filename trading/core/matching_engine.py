@@ -49,31 +49,26 @@ class MatchingEngine:
         return self.order_book.remove_order(order_id)
 
     def match_orders(self) -> None:
-        """Placeholder matching logic.
-
-        For now, implement a minimal price-time priority match:
-        - If the best bid price >= best ask price, match at the ask price.
-        - Market orders cross the spread immediately.
-        - Partial fills are supported.
-        """
-        bids = self.order_book.bids
-        asks = self.order_book.asks
-
+        """Price-time priority matching using best bid/ask from the order book."""
         def best_bid_price() -> Optional[float]:
-            if not bids:
+            bb = self.order_book.best_bid()
+            if bb is None:
                 return None
-            p = bids[0].price
+            p = bb.price
             return float("inf") if p is None else p
 
         def best_ask_price() -> Optional[float]:
-            if not asks:
+            ba = self.order_book.best_ask()
+            if ba is None:
                 return None
-            p = asks[0].price
+            p = ba.price
             return 0.0 if p is None else p
 
-        while bids and asks:
-            bb = bids[0]
-            ba = asks[0]
+        while True:
+            bb = self.order_book.best_bid()
+            ba = self.order_book.best_ask()
+            if bb is None or ba is None:
+                break
 
             bid_price = best_bid_price()
             ask_price = best_ask_price()
@@ -103,8 +98,8 @@ class MatchingEngine:
             ba.quantity -= trade_qty
 
             if bb.quantity <= 0:
-                bids.pop(0)
+                self.order_book.remove_order(bb.id)
             if ba.quantity <= 0:
-                asks.pop(0)
+                self.order_book.remove_order(ba.id)
 
 
