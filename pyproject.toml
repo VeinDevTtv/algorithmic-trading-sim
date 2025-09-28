@@ -7,7 +7,10 @@ name = "algorithmic-trading-sim"
 version = "0.1.0"
 description = "Core OOP backbone for an algorithmic trading simulator"
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.23",
+]
 
 [tool.pytest.ini_options]
 minversion = "7.0"

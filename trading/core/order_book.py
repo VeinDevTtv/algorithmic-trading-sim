@@ -99,3 +99,37 @@ class OrderBook:
         return self._orders_by_id.get(oid)
 
 
+
+    # --- Depth snapshot for visualization ---
+    def depth(self, levels: int = 5) -> Dict[str, List[Tuple[float, float]]]:
+        """Return top N levels for bids and asks as (price, cumulative_quantity).
+
+        Market orders are ignored in the depth aggregation.
+        """
+        self._clean_top(self._bid_heap)
+        self._clean_top(self._ask_heap)
+
+        def top_levels(heap: List[Tuple[float, float, int, str]], is_bid: bool) -> List[Tuple[float, float]]:
+            # Gather raw price levels
+            prices: Dict[float, float] = {}
+            seen: int = 0
+            # We iterate a snapshot copy to avoid mutating the heap order
+            for price_key, _, _, oid in sorted(heap):
+                order = self._orders_by_id.get(oid)
+                if order is None or order.price is None or oid in self._removed_ids or order.quantity <= 0:
+                    continue
+                px = float(order.price)
+                prices[px] = prices.get(px, 0.0) + float(order.quantity)
+                # Count unique price levels
+                # For performance, exit early once enough unique levels collected
+                # Will sort after aggregation.
+            # Sort and truncate by side
+            items = list(prices.items())
+            items.sort(key=lambda x: x[0], reverse=is_bid)
+            items = items[:levels]
+            # Convert to (price, size)
+            return [(p, q) for p, q in items]
+
+        bids = top_levels(self._bid_heap, True)
+        asks = top_levels(self._ask_heap, False)
+        return {"bids": bids, "asks": asks}

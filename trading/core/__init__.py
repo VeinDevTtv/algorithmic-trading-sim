@@ -5,7 +5,7 @@ from .order import Order
 from .order_factory import OrderFactory
 from .trader import Trader
 from .order_book import OrderBook
-from .matching_engine import MatchingEngine
+from .matching_engine import MatchingEngine, Trade
 
 __all__ = [
     "OrderType",
@@ -15,6 +15,7 @@ __all__ = [
     "Trader",
     "OrderBook",
     "MatchingEngine",
+    "Trade",
 ]
 
 

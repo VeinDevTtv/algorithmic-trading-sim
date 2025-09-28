@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from datetime import datetime, timezone
+from typing import Callable, DefaultDict, Dict, List, Optional
 
 from .enums import OrderSide, OrderType
 from .order import Order
 from .order_book import OrderBook
+
+
+Subscriber = Callable[[str, object], None]
 
 
 @dataclass
@@ -14,6 +18,7 @@ class Trade:
     sell_order_id: str
     price: float
     quantity: float
+    timestamp: datetime
 
 
 @dataclass
@@ -24,10 +29,30 @@ class MatchingEngine:
     last_trade_price: Optional[float] = None
     # Store stop-loss orders keyed by (symbol, side) -> list of (stop_price, order)
     _stop_orders: List[Order] = field(default_factory=list)
+    _subscribers: DefaultDict[str, List[Subscriber]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         # Subscribe to order book updates (Observer)
         self.order_book.subscribe("order_added", self._on_order_added)
+
+    # --- Pub/Sub for external listeners (e.g., UI, server) ---
+    def subscribe(self, event: str, handler: Subscriber) -> None:
+        if event not in self._subscribers:
+            self._subscribers[event] = []
+        self._subscribers[event].append(handler)
+
+    def unsubscribe(self, event: str, handler: Subscriber) -> None:
+        handlers = self._subscribers.get(event)
+        if not handlers:
+            return
+        try:
+            handlers.remove(handler)
+        except ValueError:
+            pass
+
+    def _notify(self, event: str, payload: object) -> None:
+        for handler in self._subscribers.get(event, []):
+            handler(event, payload)
 
     def register_trader(self, trader: "Trader") -> None:
         self.traders[trader.trader_id] = trader
@@ -152,9 +177,12 @@ class MatchingEngine:
                 sell_order_id=sell_order.id,
                 price=float(execution_price),
                 quantity=trade_qty,
+                timestamp=datetime.now(tz=timezone.utc),
             )
             self.trades.append(trade)
             self._apply_trade_balances(buy_order, sell_order, trade.price, trade.quantity)
+            # Notify subscribers about trade execution
+            self._notify("trade_executed", trade)
 
             bb.quantity -= trade_qty
             ba.quantity -= trade_qty
